@@ -6,6 +6,35 @@ This README is written for new joiners who want to understand the framework stru
 
 ---
 
+## Why this architecture
+
+This project is intentionally organized around a small number of clear responsibilities so the tests remain readable, maintainable, and resilient as the API evolves.
+
+- `ApiClient` owns the shared HTTP configuration: base URL, JSON headers, auth header, and request/response logging. This keeps HTTP concerns in one place instead of repeating REST Assured setup across every test.
+- `UserService` owns endpoint behavior. Tests interact with service methods like `listUsers()`, `getUser()`, and `createUser()` instead of embedding raw REST Assured calls directly in the assertions. That makes tests read like business flows and reduces duplication.
+- `BaseApiTest` centralizes shared schema paths and constants so every endpoint test follows the same contract validation conventions.
+- `TestDataFactory` generates fresh data per run. Using dynamic values avoids flaky tests caused by duplicate emails or collisions with existing records.
+- `ApiAssertions` centralizes status checks and JSON schema assertions. This keeps failures consistent and makes the test output easier to interpret.
+- Token checks are handled through assumptions, so write-operation tests skip cleanly when no valid token is supplied instead of failing noisily for configuration reasons.
+
+This structure was chosen because API tests are most valuable when they clearly communicate intent. The framework favors explicit behavior checks over hidden implementation details, which is important when onboarding new team members or extending the suite with new endpoints.
+
+---
+
+## What I would do differently with more time
+
+If this project had more time, I would extend it in a few targeted ways without changing the overall design.
+
+- Add CI validation with GitHub Actions to run the suite on every push and pull request.
+- Add explicit cleanup and retry logic around delete/create flows to reduce occasional environmental flakiness from shared API state.
+- Add a small set of contract-level tests for pagination edge cases, invalid query parameters, and rate-limit behavior.
+- Expand the test data strategy to cover more invalid payload combinations and edge-case boundary values.
+- Add richer reporting and failure artifacts such as saved request/response dumps and per-test summaries.
+- Split the suite by risk level so smoke tests run quickly in PR validation, while broader regression coverage runs in a nightly or scheduled job.
+
+These improvements would increase confidence in CI and make the framework easier to scale as more endpoints or teams are added.
+---
+
 ## 1. Project Overview
 
 This project validates the GoREST API:
@@ -470,30 +499,53 @@ This verifies that the API response structure is correct, including required fie
 
 ## 10. Current Test Coverage
 
-The project currently includes these scenarios:
+The project currently includes 20 concrete API scenarios across the Users endpoints. The test suite is organized by endpoint and covers both happy-path and failure-path behavior.
 
-1. List users returns 200 and a JSON array
-2. List users supports pagination
-3. Get existing user by ID
-4. Create user successfully
-5. Create user with duplicate email returns validation error
-6. Create user without token returns unauthorized or forbidden
-7. Create user with invalid email returns validation error
-8. Full update user using PUT
-9. Partial update user using PATCH
-10. Delete user successfully
-11. Get deleted user returns 404
-12. Get non-existing user returns 404
+### Implemented scenarios
 
-Coverage areas:
+1. `GET /users` returns 200 and a JSON array
+2. `GET /users` supports pagination with `per_page`
+3. `GET /users/{id}` returns an existing user by ID
+4. `GET /users/{id}` returns 404 for a non-existing user
+5. `POST /users` creates a user successfully
+6. `POST /users` rejects a duplicate email with a validation error
+7. `POST /users` rejects requests without a token
+8. `POST /users` rejects an invalid email format
+9. `POST /users` rejects an invalid gender value
+10. `POST /users` rejects an invalid status value
+11. `POST /users` rejects a request without a body
+12. `POST /users` rejects a name longer than the allowed maximum length
+13. `POST /users` rejects an empty name
+14. `POST /users` rejects a null status value
+15. `PUT /users/{id}` fully updates an existing user
+16. `PATCH /users/{id}` partially updates a user status
+17. `PUT /users/{id}` rejects an invalid status value
+18. `PATCH /users/{id}` rejects a long name value
+19. `DELETE /users/{id}` deletes a user successfully
+20. `GET /users/{id}` returns 404 after a user has been deleted
 
-- CRUD operations
-- Positive scenarios
-- Negative scenarios
+### Coverage areas
+
+- CRUD operations for the Users API
+- Positive and negative scenarios
 - Authentication error handling
 - Validation error handling
 - JSON schema validation
-- Edge cases
+- Data cleanup and lifecycle checks
+- Pagination and resource lookup edge cases
+
+### Why these scenarios were chosen
+
+The suite focuses on the behaviors that matter most for API reliability and regression detection:
+
+- Read scenarios verify that the public contract is stable and the response payload matches the expected structure.
+- Create scenarios validate the success path and the most common validation problems: duplicate values, invalid email format, unsupported enum values, and required field violations.
+- Update scenarios confirm that full replacement and partial patch flows behave correctly and that validation is enforced on both write operations.
+- Delete scenarios verify the resource lifecycle, including the expected success response and the subsequent 404 after deletion.
+- Authentication checks ensure the API fails safely when the token is missing or invalid.
+- JSON schema validation protects against silent contract changes in required fields, types, and error payloads.
+
+This is a practical but meaningful coverage set: it validates the core user workflow and the most likely failures without turning the suite into a large, hard-to-maintain matrix of low-value permutations.
 
 ---
 
