@@ -21,6 +21,10 @@ public class UserService {
         return apiClient.authorizedRequest().body(user).post("/users");
     }
 
+    public Response createUserWithoutBody() {
+        return apiClient.authorizedRequest().post("/users");
+    }
+
     public Response createUserWithoutToken(User user) {
         return apiClient.request().body(user).post("/users");
     }

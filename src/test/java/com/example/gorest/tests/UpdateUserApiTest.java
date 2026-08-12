@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import static com.example.gorest.support.ApiAssertions.assertMatchesJsonSchema;
 import static com.example.gorest.support.ApiAssertions.assertStatusCode;
 import static com.example.gorest.support.ApiAssertions.assertUserMatches;
+import static com.example.gorest.support.ApiAssertions.assertValidationContains;
 import static com.example.gorest.support.AuthAssumptions.requireToken;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -44,6 +45,36 @@ class UpdateUserApiTest extends BaseApiTest {
         assertStatusCode(response, 200);
         assertMatchesJsonSchema(response, USER_SCHEMA);
         assertEquals("inactive", response.as(User.class).getStatus());
+        users.deleteUser(created.getId());
+    }
+
+    @Test
+    @DisplayName("PUT /users/{id} - Update user with invalid status returns validation error")
+    void updateUserWithInvalidStatusReturnsValidationError() {
+        requireToken();
+        User created = users.createUser(TestDataFactory.validUser()).as(User.class);
+        User updatePayload = TestDataFactory.invalidStatusUser();
+
+        Response response = users.updateUserPut(created.getId(), updatePayload);
+
+        assertStatusCode(response, 422);
+        assertMatchesJsonSchema(response, VALIDATION_ERROR_SCHEMA);
+        assertValidationContains(response, "status");
+        users.deleteUser(created.getId());
+    }
+
+    @Test
+    @DisplayName("PATCH /users/{id} - Partial update with long name returns validation error")
+    void partialUpdateWithLongNameReturnsValidationError() {
+        requireToken();
+        User created = users.createUser(TestDataFactory.validUser()).as(User.class);
+        User updatePayload = TestDataFactory.invalidNameUser();
+
+        Response response = users.updateUserPatch(created.getId(), updatePayload);
+
+        assertStatusCode(response, 422);
+        assertMatchesJsonSchema(response, VALIDATION_ERROR_SCHEMA);
+        assertValidationContains(response, "name");
         users.deleteUser(created.getId());
     }
 }

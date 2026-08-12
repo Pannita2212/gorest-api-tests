@@ -29,6 +29,36 @@ public final class TestDataFactory {
         return user;
     }
 
+    public static User invalidGenderUser() {
+        User user = validUser();
+        user.setGender("invalid-gender");
+        return user;
+    }
+
+    public static User invalidStatusUser() {
+        User user = validUser();
+        user.setStatus("invalid-status");
+        return user;
+    }
+
+    public static User invalidNameUser() {
+        User user = validUser();
+        user.setName("a".repeat(201)); // Assuming max length is 100
+        return user;
+    }
+
+    public static User emptyNameUser() {
+        User user = validUser();
+        user.setName("");
+        return user;
+    }
+
+    public static User nullStatusUser() {
+        User user = validUser();
+        user.setStatus(null);
+        return user;
+    }
+
     public static User partialStatusUpdate(String status) {
         User user = new User();
         user.setStatus(status);

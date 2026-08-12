@@ -68,4 +68,81 @@ class CreateUserApiTest extends BaseApiTest {
         assertMatchesJsonSchema(response, VALIDATION_ERROR_SCHEMA);
         assertValidationContains(response, "email");
     }
+
+    @Test
+    @DisplayName("POST /users - Create user with invalid gender returns validation error")
+    void createUserWithInvalidGenderReturnsValidationError() {
+        requireToken();
+        User payload = TestDataFactory.invalidGenderUser();
+
+        Response response = users.createUser(payload);
+
+        assertStatusCode(response, 422);
+        assertMatchesJsonSchema(response, VALIDATION_ERROR_SCHEMA);
+        assertValidationContains(response, "gender");
+    }
+
+    @Test
+    @DisplayName("POST /users - Create user with invalid status returns validation error")
+    void createUserWithInvalidStatusReturnsValidationError() {
+        requireToken();
+        User payload = TestDataFactory.invalidStatusUser();
+
+        Response response = users.createUser(payload);
+
+        assertStatusCode(response, 422);
+        assertMatchesJsonSchema(response, VALIDATION_ERROR_SCHEMA);
+        assertValidationContains(response, "status");
+    }
+
+    @Test
+    @DisplayName("POST /users - Create user without body returns validation error")
+    void createUserWithoutBodyReturnsValidationError() {
+        requireToken();
+
+        Response response = users.createUserWithoutBody();
+
+        assertStatusCode(response, 422);
+        assertMatchesJsonSchema(response, VALIDATION_ERROR_SCHEMA);
+        assertValidationContains(response, "name");
+    }
+
+    @Test
+    @DisplayName("POST /users - Create user with name more than max length returns validation error")
+    void createUserWithInvalidNameReturnsValidationError() {
+        requireToken();
+        User payload = TestDataFactory.invalidNameUser();
+
+        Response response = users.createUser(payload);
+
+        assertStatusCode(response, 422);
+        assertMatchesJsonSchema(response, VALIDATION_ERROR_SCHEMA);
+        assertValidationContains(response, "name");
+    }
+
+    @Test
+    @DisplayName("POST /users - Create user with empty name returns validation error")
+    void createUserWithEmptyNameReturnsValidationError() {
+        requireToken();
+        User payload = TestDataFactory.emptyNameUser();
+
+        Response response = users.createUser(payload);
+
+        assertStatusCode(response, 422);
+        assertMatchesJsonSchema(response, VALIDATION_ERROR_SCHEMA);
+        assertValidationContains(response, "name");
+    }
+
+    @Test
+    @DisplayName("POST /users - Create user with null status returns validation error")
+    void createUserWithNullStatusReturnsValidationError() {
+        requireToken();
+        User payload = TestDataFactory.nullStatusUser();
+
+        Response response = users.createUser(payload);
+
+        assertStatusCode(response, 422);
+        assertMatchesJsonSchema(response, VALIDATION_ERROR_SCHEMA);
+        assertValidationContains(response, "status");
+    }
 }
