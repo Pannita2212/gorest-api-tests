@@ -149,13 +149,13 @@ mvn clean test
 ### Run one test class
 
 ```bash
-mvn test -Dtest=UserApiTest
+mvn test -Dtest=ListUsersApiTest
 ```
 
 ### Run one specific test method
 
 ```bash
-mvn test -Dtest=UserApiTest#createUserSuccessfully
+mvn test -Dtest=ListUsersApiTest#createUserSuccessfully
 ```
 
 ### Pass token directly without `.env`
@@ -210,7 +210,11 @@ src/test
 │   │   └── AuthAssumptions.java
 │   └── tests
 │       ├── BaseApiTest.java
-│       └── UserApiTest.java
+│       ├── CreateUserApiTest.java
+│       ├── DeleteUserApiTest.java
+│       ├── GetUserApiTest.java
+│       ├── ListUsersApiTest.java
+│       └── UpdateUserApiTest.java
 └── resources
     ├── schemas
     │   ├── error-message-schema.json
@@ -233,6 +237,33 @@ src/test
 | `model` | Contains request and response POJOs |
 | `support` | Contains assertion helpers and test assumptions |
 | `tests` | Contains actual API test scenarios |
+
+---
+
+## Test File Separation by Endpoint
+
+Tests are separated by endpoint responsibility so new joiners can quickly find the relevant scenarios and add new coverage without editing one large test file.
+
+Current test files:
+
+```text
+src/test/java/com/example/gorest/tests
+├── BaseApiTest.java
+├── ListUsersApiTest.java      # GET /users
+├── GetUserApiTest.java        # GET /users/{id}
+├── CreateUserApiTest.java     # POST /users
+├── UpdateUserApiTest.java     # PUT /users/{id}, PATCH /users/{id}
+└── DeleteUserApiTest.java     # DELETE /users/{id}
+```
+
+Guideline:
+
+- Add list/search scenarios into `ListUsersApiTest.java`.
+- Add get-detail and not-found scenarios into `GetUserApiTest.java`.
+- Add create and create-validation scenarios into `CreateUserApiTest.java`.
+- Add full or partial update scenarios into `UpdateUserApiTest.java`.
+- Add delete and post-delete verification scenarios into `DeleteUserApiTest.java`.
+- Keep shared constants, schema paths, and common setup in `BaseApiTest.java`.
 
 ---
 
@@ -704,7 +735,7 @@ Common reasons:
 
 ---
 
-## 14.  Implementation Checklist
+## 14. Implementation Checklist
 
 When implementing a new API endpoint, follow this checklist:
 
